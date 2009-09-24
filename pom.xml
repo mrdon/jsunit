@@ -20,7 +20,7 @@
     <groupId>de.berlios.jsunit</groupId>
     <artifactId>jsunit-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.3-db1-SNAPSHOT</version>
+    <version>1.3-db1</version>
     <name>JsUnit Parent</name>
     <description>
         Parent module of the JsUnit Maven build.  It combines the Java
