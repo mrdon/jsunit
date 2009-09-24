@@ -578,8 +578,24 @@ function CallStack( depth )
      * @type Array<String>
      */
     this.mStack = null;
-    if( JsUtil.prototype.hasCallStackSupport )
+    if( JsUtil.prototype.hasCallStackSupport ) {
         this._fill( depth );
+    }
+
+    // Detect rhino and try to determine the call stack via super hacky means
+    else if (Packages) {
+        try {
+            Packages.de.berlios.jsunit.JsUnitRhinoRunner.generateException();
+        } catch (err) {
+            var stackStr = new String(err.rhinoException.scriptStackTrace);
+            this.mStack = new String(stackStr).split(java.lang.System.getProperty("line.separator"));
+            this.mStack.shift();
+            for (var x in this.mStack) {
+                var trim = this.mStack[x].trim();
+                this.mStack[x] = trim.substring(3);
+            }
+        }
+    }
 }
 
 /**
@@ -653,6 +669,16 @@ function CallStack_getStack()
             a[i] = this.mStack[i];
     return a;
 }
+
+/**
+ * Shifts frames off the stack
+ **/
+function CallStack_shift()
+{
+    if( this.mStack != null )
+        this.mStack.shift();
+}
+
 /**
  * Retrieve call stack as string.
  * The function returns the call stack as string. Each stack frame has an 
@@ -674,6 +700,7 @@ function CallStack_toString()
 CallStack.prototype._fill = CallStack__fill;
 CallStack.prototype.fill = CallStack_fill;
 CallStack.prototype.getStack = CallStack_getStack;
+CallStack.prototype.shift = CallStack_shift;
 CallStack.prototype.toString = CallStack_toString;
 
 

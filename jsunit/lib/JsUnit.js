@@ -42,6 +42,11 @@ limitations under the License.
 function AssertionFailedError( msg, stack )
 {
     JsUnitError.call( this, msg );
+    // Pop the first frame off, usually the assertion call
+    if (stack) {
+        stack.shift();
+    }
+
     /**
      * The call stack for the message.
      */
@@ -676,7 +681,7 @@ function Assert_assertTrue( msg, cond )
         cond = msg;
         msg = null;
     }
-    if( !eval( cond ))
+    if( !eval( cond )) 
         this.fail( "Condition failed \"" + cond + "\"", new CallStack(), msg );
 }
 /**

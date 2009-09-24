@@ -92,6 +92,13 @@ public class JsUnitRhinoRunner {
     }
 
     /**
+     * This exists to allow Rhino scripts to access the call stack
+     */
+    public static void generateException() {
+        throw new RuntimeException();
+    }
+
+    /**
      * Load additional code into the JavaScript context. The provided reader is read until
      * execution and closed afterwards.
      * 
