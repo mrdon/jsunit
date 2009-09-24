@@ -2162,6 +2162,87 @@ function ClassicResultPrinter_writeLn( str )
 ClassicResultPrinter.prototype = new ResultPrinter();
 ClassicResultPrinter.glue();
 
+/**
+ * The ResultPrinter of JsUnit 1.3-db1. Forwards events to all aggregated printsers
+ * @ctor
+ * Constructor.
+ * @tparam Array printers A list of printers.
+ * Initialization of the AggregateResultPrinter.
+ */
+function AggregateResultPrinter( printers )
+{
+    this.printers = printers;
+}
+/**
+ * An occurred error was added.
+ * @tparam Test test The failed test.
+ * @tparam Error except The thrown exception.
+ */
+function AggregateResultPrinter_addError( test, except )
+{
+    for (x in this.printers) {
+        this.printers[x].addError(test, except);
+    }
+}
+/**
+ * An occurred failure was added.
+ * @tparam Test test The failed test.
+ * @tparam Error except The thrown exception.
+ */
+function AggregateResultPrinter_addFailure( test, except )
+{
+    for (x in this.printers) {
+        this.printers[x].addFailure(test, except);
+    }
+}
+/**
+ * A test ended
+ * @tparam Test test The ended test.
+ */
+function AggregateResultPrinter_endTest( test )
+{
+    for (x in this.printers) {
+        this.printers[x].endTest(test);
+    }
+}
+/**
+ * Print the complete test result.
+ * @tparam TestResult result The complete test result.
+ * @tparam Number runTime The elapsed time in ms.
+ * Overloaded, because only the footer is needed.
+ */
+function AggregateResultPrinter_print( result, runTime )
+{
+    for (x in this.printers) {
+        this.printers[x].print(result, runTime);
+    }
+}
+/**
+ * A test started
+ * @tparam Test test The started test.
+ */
+function AggregateResultPrinter_startTest( test )
+{
+    for (x in this.printers) {
+        this.printers[x].startTest(test);
+    }
+}
+/**
+ * Write a line of text.
+ * @tparam String str The text to print on the line.
+ * The method of this object does effectively nothing. It must be 
+ * overloaded with a proper version, that knows how to print a line,
+ * if the script engine cannot be detected (yet).
+ */
+function AggregateResultPrinter_writeLn( str )
+{
+    for (x in this.printers) {
+        this.printers[x].writeLn(str);
+    }
+}
+AggregateResultPrinter.prototype = new ResultPrinter();
+AggregateResultPrinter.glue();
+
 
 /**
  * Convert the result of a TextTestPrinter into XML to be used by JUnitReport.

@@ -38,6 +38,7 @@ public class JsUnitRhinoRunner {
 
     private Context context;
     private final Scriptable scope;
+    private final boolean printSummary;
 
     private static void loadResource(Context context, Scriptable scope, final String name) {
         final InputStream is = JsUnitRhinoRunner.class.getResourceAsStream("/" + name);
@@ -63,11 +64,22 @@ public class JsUnitRhinoRunner {
     /**
      * Constructs a JsUnitRhinoRunner. A JavaScript context is created and initialized with the
      * JsUnit code.
-     * 
+     *
      * @throws JsUnitRuntimeException if the JavaScript code of JsUnit has errors.
      * @since upcoming
      */
     public JsUnitRhinoRunner() {
+        this(false);
+    }
+    /**
+     * Constructs a JsUnitRhinoRunner. A JavaScript context is created and initialized with the
+     * JsUnit code.
+     * 
+     * @throws JsUnitRuntimeException if the JavaScript code of JsUnit has errors.
+     * @since upcoming
+     */
+    public JsUnitRhinoRunner(boolean printSummary) {
+        this.printSummary = printSummary;
         context = Context.enter();
         context.setOptimizationLevel(-1);
         scope = context.initStandardObjects(null, false);
@@ -79,7 +91,7 @@ public class JsUnitRhinoRunner {
             ((ScriptableObject)scope).defineFunctionProperties(names, JsUnitRhinoRunner.class,
                                                         ScriptableObject.DONTENUM);
         } catch (PropertyException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            // ignore as only used for debugging
         }
 
         loadResource(context, scope, "JsUtil.js");
@@ -175,12 +187,13 @@ public class JsUnitRhinoRunner {
         context.setOptimizationLevel(-1);
         try {
             try {
-                final String xml = (String)context.evaluateString(scope, ""
+                String runScript = ""
                     + "var stringWriter = new StringWriter();\n"
-                    + "var runner = new EmbeddedTextTestRunner(new XMLResultPrinter(stringWriter));\n"
+                    + "var runner = new EmbeddedTextTestRunner(" + getPrinterScript() + ");\n"
                     + "var collector = new AllTestsCollector(this);\n"
                     + "runner.run(collector.collectTests());\n"
-                    + "stringWriter.get();\n", "AllTests", 1, null);
+                    + "stringWriter.get();\n";
+                final String xml = (String)context.evaluateString(scope, runScript, "AllTests", 1, null);
                 writer.write(xml);
             } catch (final EcmaError e) {
                 throw new JsUnitRuntimeException("JavaScript error running tests", e);
@@ -191,6 +204,14 @@ public class JsUnitRhinoRunner {
             Context.exit();
             close(writer);
         }
+    }
+
+    private String getPrinterScript() {
+        String printer = "new XMLResultPrinter(stringWriter)";
+        if (printSummary) {
+            printer = "new AggregateResultPrinter([" + printer + ",new ClassicResultPrinter(java.lang.System.out)])";
+        }
+        return printer;
     }
 
     /**
@@ -218,7 +239,7 @@ public class JsUnitRhinoRunner {
             try {
                 final String xml = (String)context.evaluateString(scope, ""
                     + "var stringWriter = new StringWriter();\n"
-                    + "var runner = new EmbeddedTextTestRunner(new XMLResultPrinter(stringWriter));\n"
+                    + "var runner = new EmbeddedTextTestRunner(" + getPrinterScript() + ");\n"
                     + "var collector = new TestSuiteCollector(this);\n"
                     + "runner.run(collector.collectTests(), \""+ name + "\");\n"
                     + "stringWriter.get();\n", name, 1, null);
@@ -259,7 +280,7 @@ public class JsUnitRhinoRunner {
             try {
                 final String xml = (String)context.evaluateString(scope, ""
                     + "var stringWriter = new StringWriter();\n"
-                    + "var runner = new EmbeddedTextTestRunner(new XMLResultPrinter(stringWriter));\n"
+                    + "var runner = new EmbeddedTextTestRunner(" + getPrinterScript() + ");\n"
                     + "var collector = new TestCaseCollector(this);\n"
                     + "runner.run(collector.collectTests(), \""+ name + "\");\n"
                     + "stringWriter.get();\n", name, 1, null);
@@ -299,11 +320,4 @@ public class JsUnitRhinoRunner {
         }
     }
 
-    private static void copy(final Reader reader, final Writer writer) throws IOException {
-        final Reader in = new BufferedReader(reader, 1024 * 16);
-        int i;
-        while ((i = in.read()) != -1) {
-            writer.write(i);
-        }
-    }
 }

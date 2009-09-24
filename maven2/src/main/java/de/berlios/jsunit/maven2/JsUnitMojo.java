@@ -181,7 +181,7 @@ public class JsUnitMojo extends AbstractMojo {
         for (int i = 0; i < testSuites.length || (skipExec && testSuites.length == 0); i++) {
             JsUnitRhinoRunner runner = null;
             try {
-                runner = new JsUnitRhinoRunner();
+                runner = new JsUnitRhinoRunner(printSummary);
             } catch (final JsUnitRuntimeException e) {
                 throw new MojoExecutionException("Cannot evaluate JavaScript code of JsUnit", e);
             }
