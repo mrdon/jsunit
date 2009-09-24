@@ -16,10 +16,7 @@
  */
 package de.berlios.jsunit;
 
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.EcmaError;
-import org.mozilla.javascript.JavaScriptException;
-import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,21 +38,15 @@ public class JsUnitRhinoRunner {
 
     private Context context;
     private final Scriptable scope;
-    private static final String jsUnit;
-    static {
-        final StringWriter writer = new StringWriter(250 * 1024);
-        loadScriptFromResource("JsUtil.js", writer);
-        loadScriptFromResource("JsUnit.js", writer);
-        jsUnit = writer.toString();
-        writer.flush();
-    }
 
-    private static void loadScriptFromResource(final String name, final Writer writer) {
+    private static void loadResource(Context context, Scriptable scope, final String name) {
         final InputStream is = JsUnitRhinoRunner.class.getResourceAsStream("/" + name);
         if (is != null) {
             try {
-                final Reader reader = new InputStreamReader(is, "ISO-8859-1");
-                copy(reader, writer);
+                Reader reader = new InputStreamReader(is, "ISO-8859-1");
+                context.evaluateReader(scope, reader, name, 1, null);
+            } catch (final JavaScriptException e) {
+                throw new JsUnitRuntimeException("Cannot evaluate JavaScript code of JsUnit", e);
             } catch (final UnsupportedEncodingException e) {
                 throw new InternalError("Missing standard character set ISO-8859-1");
             } catch (final IOException e) {
@@ -63,6 +54,7 @@ public class JsUnitRhinoRunner {
             } finally {
                 close(is);
             }
+
         } else {
             throw new InternalError("Cannot find resource " + name);
         }
@@ -77,14 +69,26 @@ public class JsUnitRhinoRunner {
      */
     public JsUnitRhinoRunner() {
         context = Context.enter();
+        context.setOptimizationLevel(-1);
         scope = context.initStandardObjects(null, false);
+
+        // Define some global functions particular to the shell. Note
+        // that these functions are not part of ECMA.
+        String[] names = { "print"};
         try {
-            context.evaluateString(scope, jsUnit, "JsUnit", 1, null);
-        } catch (final JavaScriptException e) {
-            throw new JsUnitRuntimeException("Cannot evaluate JavaScript code of JsUnit", e);
-        } finally {
-            Context.exit();
+            ((ScriptableObject)scope).defineFunctionProperties(names, JsUnitRhinoRunner.class,
+                                                        ScriptableObject.DONTENUM);
+        } catch (PropertyException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+
+        loadResource(context, scope, "JsUtil.js");
+        loadResource(context, scope, "JsUnit.js");
+        Context.exit();
+    }
+
+    public static void print(String val) {
+        System.out.println(val);
     }
 
     /**
@@ -106,6 +110,7 @@ public class JsUnitRhinoRunner {
         }
         context = Context.enter(context);
         try {
+            context.setOptimizationLevel(-1);
             context.evaluateReader(scope, reader, name, 1, null);
         } catch (final JavaScriptException e) {
             throw new JsUnitException("Cannot evaluate JavaScript code of " + name, e);
@@ -133,6 +138,7 @@ public class JsUnitRhinoRunner {
             name = "anonymous";
         }
         context = Context.enter(context);
+        context.setOptimizationLevel(-1);
         try {
             final Object result = context.evaluateString(scope, code, name, 1, null);
             return result;// Context.toString(result);
@@ -159,6 +165,7 @@ public class JsUnitRhinoRunner {
             throw new IllegalArgumentException("The writer is null");
         }
         context = Context.enter(context);
+        context.setOptimizationLevel(-1);
         try {
             try {
                 final String xml = (String)context.evaluateString(scope, ""
@@ -199,6 +206,7 @@ public class JsUnitRhinoRunner {
         }
         name = name == null ? "AllTestSuites" : name;
         context = Context.enter(context);
+        context.setOptimizationLevel(-1);
         try {
             try {
                 final String xml = (String)context.evaluateString(scope, ""
@@ -239,6 +247,7 @@ public class JsUnitRhinoRunner {
         }
         name = name == null ? "AllTestCases" : name;
         context = Context.enter(context);
+        context.setOptimizationLevel(-1);
         try {
             try {
                 final String xml = (String)context.evaluateString(scope, ""

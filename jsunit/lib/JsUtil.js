@@ -106,7 +106,7 @@ else
  */
 function JsUnitError( msg )
 {
-    this.message = msg || "";   
+    this.message = msg || "";
 }
 /**
  * String representation of the error.
@@ -437,10 +437,29 @@ function JsUtil_quit( ret )
     else if( JsUtil.prototype.isWSH )
         WScript.Quit( ret );
 }
+
+function JsUtil_buildErrorMessage(ex) {
+    var msg = "";
+    if (ex) {
+        msg = ex.toString();
+        if (ex.fileName) {
+            msg += " ("+ex.fileName;
+        }
+        if (ex.lineNumber) {
+            msg += ":" + ex.lineNumber;
+        }
+        if (ex.fileName) {
+            msg += ")";
+        }
+    }
+    return msg;
+}
+
 JsUtil.prototype.getCaller = JsUtil_getCaller;
 JsUtil.prototype.getSystemWriter = JsUtil_getSystemWriter;
 JsUtil.prototype.include = JsUtil_include;
 JsUtil.prototype.quit = JsUtil_quit;
+JsUtil.prototype.buildErrorMessage = JsUtil_buildErrorMessage;
 /**
  * The SystemWriter.
  * @type SystemWriter
@@ -528,6 +547,7 @@ JsUtil.prototype.isObtree = this.WebObject != null;
  */
 JsUtil.prototype.hasCallStackSupport = 
        JsUtil.prototype.getCaller() !== undefined;
+
 /**
  * The global object.
  * @type Object

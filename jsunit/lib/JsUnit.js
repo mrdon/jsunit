@@ -188,8 +188,7 @@ function TestFailure( test, except )
  */
 function TestFailure_exceptionMessage()
 { 
-    var ex = this.thrownException(); 
-    return ex ? ex.toString() : "";
+    return JsUtil.prototype.buildErrorMessage(this.thrownException());
 }
 /**
  * Retrieve the failed test.
@@ -1363,7 +1362,7 @@ function BaseTestRunner()
 function BaseTestRunner_addError( test, except ) 
 { 
     this.testFailed( TestRunListener.prototype.STATUS_ERROR, 
-        test.toString(), except.toString()); 
+        test.toString(), JsUtil.prototype.buildErrorMessage(except));
 }
 /**
  * Implementation of TestListener.
@@ -2255,7 +2254,7 @@ function XMLResultPrinter_print( result, runTime )
             writer.print( tag );
             writer.print( ' message="' );
             var htmlWriter = new HTMLWriterFilter();
-            htmlWriter.println( defect.toString());
+            htmlWriter.println( JsUtil.prototype.buildErrorMessage(defect));
             var message = htmlWriter.getWriter().get().replace( /<br>/g, " " );
             writer.print( message.trim());
             writer.print( '" type=""' );
