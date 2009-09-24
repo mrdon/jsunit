@@ -20,7 +20,7 @@
     <parent>
         <groupId>de.berlios.jsunit</groupId>
         <artifactId>jsunit-parent</artifactId>
-        <version>1.3-db2</version>
+        <version>1.3-db3-SNAPSHOT</version>
     </parent>
 
     <artifactId>jsunit</artifactId>
