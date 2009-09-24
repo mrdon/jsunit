@@ -587,12 +587,14 @@ function CallStack( depth )
         try {
             Packages.de.berlios.jsunit.JsUnitRhinoRunner.generateException();
         } catch (err) {
-            var stackStr = new String(err.rhinoException.scriptStackTrace);
-            this.mStack = new String(stackStr).split(java.lang.System.getProperty("line.separator"));
-            this.mStack.shift();
-            for (var x in this.mStack) {
-                var trim = this.mStack[x].trim();
-                this.mStack[x] = trim.substring(3);
+            if (err.rhinoException) {
+                var stackStr = new String(err.rhinoException.scriptStackTrace);
+                this.mStack = new String(stackStr).split(java.lang.System.getProperty("line.separator"));
+                this.mStack.shift();
+                for (var x in this.mStack) {
+                    var trim = this.mStack[x].trim();
+                    this.mStack[x] = trim.substring(3);
+                }
             }
         }
     }
