@@ -2054,7 +2054,7 @@ function ClassicResultPrinter_addError( test, except )
         str += except.description;
     }
     else
-        str = except;
+        str =  JsUtil.prototype.buildErrorMessage(except) + "\n\nStack trace: \n" + new CallStack(except).toString();
     this.writeLn( "ERROR in " + test + ": " + str );
 }
 /**
@@ -2064,7 +2064,7 @@ function ClassicResultPrinter_addError( test, except )
  */
 function ClassicResultPrinter_addFailure( test, except )
 {
-    this.writeLn( "FAILURE in " + test + ": " + except );
+    this.writeLn( "FAILURE in " + test + ": " +  JsUtil.prototype.buildErrorMessage(defect) );
     if( except.mCallStack )
         this.writeLn( except.mCallStack.toString());
 }
@@ -2267,6 +2267,7 @@ function XMLResultPrinter( writer )
  */
 function XMLResultPrinter_addError( test, except )
 {
+    except.mCallStack = new CallStack(except);
     this.mCurrentTest.mError = except;
 }
 /**

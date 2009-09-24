@@ -569,37 +569,51 @@ JsUtil.prototype.global = this;
  * Most engines will not support call stack information with a recursion.
  * Therefore the collection is stopped when the stack has two identical
  * functions in direct sequence.
- * @tparam Number depth Maximum recorded stack depth (defaults to 10).
+ * @tparam Number depth Maximum recorded stack depth (defaults to 10).  Can also be the exception
+ * to fill the stack from.
  **/
 function CallStack( depth )
 {
     /**
-     * The array with the stack. 
+     * The array with the stack.
      * @type Array<String>
      */
     this.mStack = null;
-    if( JsUtil.prototype.hasCallStackSupport ) {
-        this._fill( depth );
-    }
 
-    // Detect rhino and try to determine the call stack via super hacky means
-    else if (Packages) {
-        try {
-            Packages.de.berlios.jsunit.JsUnitRhinoRunner.generateException();
-        } catch (err) {
-            if (err.rhinoException) {
-                var stackStr = new String(err.rhinoException.scriptStackTrace);
-                this.mStack = new String(stackStr).split(java.lang.System.getProperty("line.separator"));
-                this.mStack.shift();
-                for (var x in this.mStack) {
-                    var trim = this.mStack[x].trim();
-                    this.mStack[x] = trim.substring(3);
-                }
+    if (typeof depth == "number") {
+        if( JsUtil.prototype.hasCallStackSupport ) {
+            this._fill( depth );
+        }
+        // Detect rhino and try to determine the call stack via super hacky means
+        else if (Packages) {
+            try {
+                Packages.de.berlios.jsunit.JsUnitRhinoRunner.generateException();
+            } catch (err) {
+                this._fillFromError(err);
+                if (this.mStack)
+                    this.mStack.shift();
             }
         }
+    } else {
+        this._fillFromError(depth);
     }
+
+
+
 }
 
+function CallStack__fillFromError(err) {
+    if (err && err.rhinoException) {
+        var stackStr = new String(err.rhinoException.scriptStackTrace);
+        this.mStack = new String(stackStr).split(java.lang.System.getProperty("line.separator"));
+        for (var x in this.mStack) {
+            var trim = this.mStack[x].trim();
+            this.mStack[x] = trim.substring(3);
+        }
+        // last one is usually empty
+        this.mStack.pop();
+    }
+}
 /**
  * \internal
  */
@@ -699,6 +713,7 @@ function CallStack_toString()
         }
     return s;
 }
+CallStack.prototype._fillFromError = CallStack__fillFromError;
 CallStack.prototype._fill = CallStack__fill;
 CallStack.prototype.fill = CallStack_fill;
 CallStack.prototype.getStack = CallStack_getStack;
